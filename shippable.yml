@@ -17,7 +17,3 @@ build:
   on_success:
     - if [ "$IS_PULL_REQUEST" != true ]; then docker push affmobapp/u14Android:tip; fi
 
-integrations:
-  hub:
-    - integrationName: "android"
-      type: "docker"
