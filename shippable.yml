@@ -6,22 +6,18 @@ python:
 build:
   pre_ci:
     # Always pull the latest base image to avoid any cached images on the host
-    - docker pull drydock/u14pls:prod
-    - docker build --rm -t drydock/u14javpls:tip .
+    - docker pull affmobapp/u14:prod
+    - docker build --rm -t affmobapp/u14Android:tip .
 
   pre_ci_boot:
-    image_name: drydock/u14javpls
+    image_name: affmobapp/u14Android
     image_tag: tip
     pull: false
 
-  ci:
-    # We can add sanity checks to ensure the image was built successfully here
-    - /u14javpls/test/_java.sh
-
   on_success:
-    - if [ "$IS_PULL_REQUEST" != true ]; then docker push drydock/u14javpls:tip; fi
+    - if [ "$IS_PULL_REQUEST" != true ]; then docker push affmobapp/u14Android:tip; fi
 
 integrations:
   hub:
-    - integrationName: "dockerhub"
+    - integrationName: "docker-hub"
       type: "docker"
