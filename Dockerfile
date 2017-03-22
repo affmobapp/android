@@ -1,4 +1,29 @@
-FROM bitriseio/docker-bitrise-base-alpha:latest
+FROM affmobapp/u14:prod
+ADD . /u14javAndroid
+
+RUN sudo apt-get clean
+RUN sudo mv /var/lib/apt/lists /tmp
+RUN sudo mkdir -p /var/lib/apt/lists/partial
+RUN sudo apt-get clean
+RUN sudo apt-get update
+
+RUN echo "================ Installing gradle ================="
+RUN sudo wget https://services.gradle.org/distributions/gradle-2.3-all.zip
+RUN unzip -qq gradle-2.3-all.zip -d /usr/local && rm -f gradle-2.3-all.zip
+RUN ln -fs /usr/local/gradle-2.3/bin/gradle /usr/bin
+RUN echo 'export PATH=$PATH:/usr/local/gradle-2.3/bin' >> $HOME/.bashrc
+
+RUN echo "================ Installing oracle-java8-installer ================="
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
+RUN add-apt-repository -y ppa:webupd8team/java
+RUN apt-get update
+RUN apt-get install -y oracle-java8-installer
+RUN update-alternatives --set java /usr/lib/jvm/java-8-oracle/jre/bin/java
+RUN update-alternatives --set javac /usr/lib/jvm/java-8-oracle/bin/javac
+RUN update-alternatives --set javaws /usr/lib/jvm/java-8-oracle/jre/bin/javaws
+RUN echo 'export JAVA_HOME=/usr/lib/jvm/java-8-oracle' >> $HOME/.bashrc
+RUN echo 'export PATH=$PATH:/usr/lib/jvm/java-8-oracle/jre/bin' >> $HOME/.bashrc
+
 
 ENV ANDROID_HOME /opt/android-sdk-linux
 
@@ -119,37 +144,6 @@ RUN npm install -g ionic cordova
 
 
 # ------------------------------------------------------
-# --- Install Fastlane
-
-RUN gem install fastlane --no-document
-RUN fastlane --version
-
-# ------------------------------------------------------
-# --- Install Google Cloud SDK
-# https://cloud.google.com/sdk/downloads
-#  Section: apt-get (Debian and Ubuntu only)
-#
-# E.g. for "Using Firebase Test Lab for Android from the gcloud Command Line":
-#  https://firebase.google.com/docs/test-lab/command-line
-#
-
-RUN echo "deb https://packages.cloud.google.com/apt cloud-sdk-`lsb_release -c -s` main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-RUN sudo apt-get update -qq
-RUN sudo apt-get install -y -qq google-cloud-sdk
-
-ENV GCLOUD_SDK_CONFIG /usr/lib/google-cloud-sdk/lib/googlecloudsdk/core/config.json
-
-# gcloud config doesn't update config.json. See the official Dockerfile for details:
-#  https://github.com/GoogleCloudPlatform/cloud-sdk-docker/blob/master/Dockerfile
-RUN /usr/bin/gcloud config set --installation component_manager/disable_update_check true
-RUN sed -i -- 's/\"disable_updater\": false/\"disable_updater\": true/g' $GCLOUD_SDK_CONFIG
-
-RUN /usr/bin/gcloud config set --installation core/disable_usage_reporting true
-RUN sed -i -- 's/\"disable_usage_reporting\": false/\"disable_usage_reporting\": true/g' $GCLOUD_SDK_CONFIG
-
-
-# ------------------------------------------------------
 # --- Install additional packages
 
 # Required for Android ARM Emulator
@@ -163,6 +157,3 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${ANDROID_HOME}/tools/lib64
 
 # Cleaning
 RUN apt-get clean
-
-ENV BITRISE_DOCKER_REV_NUMBER_ANDROID v2017_03_14_1
-CMD bitrise -version
