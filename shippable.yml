@@ -6,7 +6,7 @@ python:
 build:
   pre_ci:
     # Always pull the latest base image to avoid any cached images on the host
-    - docker pull affmobapp/u14:prod
+    - docker pull affmobapp/u14:master
     - docker build --rm -t affmobapp/u14Android:tip .
 
   pre_ci_boot:
